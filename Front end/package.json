@@ -1,0 +1,15 @@
+{
+  "name": "mobile-ai-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "serve -s build",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}
