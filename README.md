@@ -1,3 +1,8 @@
-# My AI Project
+# Mobile AI OS
 
-This is a ready-to-deploy AI project template.
+Deploy-ready AI system with frontend + backend.
+
+## Run locally
+cd backend
+npm install
+node server.js
