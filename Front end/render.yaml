@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: mobile-ai-os
+    env: node
+    plan: free
+    buildCommand: "cd my-ai-project/backend && npm install"
+    startCommand: "cd my-ai-project/backend && node server.js"
