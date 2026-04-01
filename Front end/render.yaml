@@ -3,5 +3,8 @@ services:
     name: mobile-ai-os
     env: node
     plan: free
-    buildCommand: "cd my-ai-project/backend && npm install"
-    startCommand: "cd my-ai-project/backend && node server.js"
+    buildCommand: "cd backend && npm install"
+    startCommand: "cd backend && node server.js"
+    envVars:
+      - key: PORT
+        value: 10000
