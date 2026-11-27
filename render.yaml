@@ -6,6 +6,11 @@ services:
     buildCommand: cd Backend && npm install
     startCommand: cd Backend && npm start
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_API_KEY
+        sync: false
