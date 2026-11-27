@@ -1,25 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mobile AI OS</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background: #101827; color: #f8fafc; }
+    main { max-width: 720px; margin: auto; }
+    textarea, input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 8px; border: 1px solid #475569; }
+    textarea { min-height: 110px; }
+    button { padding: 11px 16px; margin: 5px 5px 5px 0; border: 0; border-radius: 8px; background: #2563eb; color: white; font-weight: 600; }
+    button:disabled { opacity: .55; }
+    #output { white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; min-height: 90px; background: #1e293b; border-radius: 8px; }
+    .hint { color: #cbd5e1; font-size: 14px; }
+  </style>
 </head>
 <body>
+<main>
   <h1>Mobile AI OS</h1>
-  <input id="inputBox" />
-  <button onclick="send()">Send</button>
+  <p class="hint">AI chat, voice dictation, and image/document reading. Add OPENAI_API_KEY to the server environment to enable AI processing.</p>
+  <label for="inputBox">Ask a question</label>
+  <textarea id="inputBox" placeholder="Type your question here..."></textarea>
+  <div>
+    <button id="sendButton" onclick="sendText()">Send to AI</button>
+    <button onclick="startVoice()">Voice input</button>
+  </div>
+  <hr>
+  <label for="imageInput">Read an image or document</label>
+  <input id="imageInput" type="file" accept="image/*">
+  <button id="imageButton" onclick="readImage()">Read image</button>
+  <h2>Response</h2>
+  <div id="status" class="hint" role="status">Ready</div>
   <pre id="output"></pre>
+</main>
+<script>
+const output = document.getElementById("output");
+const statusEl = document.getElementById("status");
 
-  <script>
-    async function send() {
-      const text = document.getElementById("inputBox").value;
-      const res = await fetch("/predict", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ text })
-      });
-      const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-    }
-  </script>
+async function sendText() {
+  const text = document.getElementById("inputBox").value.trim();
+  if (!text) { statusEl.textContent = "Enter a question first."; return; }
+  setBusy(true, "Thinking...");
+  try {
+    const response = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Request failed");
+    output.textContent = data.response || "";
+    statusEl.textContent = "Complete";
+  } catch (error) {
+    statusEl.textContent = error.message;
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function readImage() {
+  const file = document.getElementById("imageInput").files[0];
+  if (!file) { statusEl.textContent = "Choose an image first."; return; }
+  if (!file.type.startsWith("image/")) { statusEl.textContent = "Choose an image file."; return; }
+  const form = new FormData();
+  form.append("image", file);
+  setBusy(true, "Reading image...");
+  try {
+    const response = await fetch("/ocr", { method: "POST", body: form });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Image request failed");
+    output.textContent = data.response || "";
+    statusEl.textContent = "Image processed";
+  } catch (error) {
+    statusEl.textContent = error.message;
+  } finally {
+    setBusy(false);
+  }
+}
+
+function setBusy(busy, message) {
+  document.getElementById("sendButton").disabled = busy;
+  document.getElementById("imageButton").disabled = busy;
+  if (message) statusEl.textContent = message;
+}
+
+function startVoice() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) { statusEl.textContent = "Voice input is not supported in this browser."; return; }
+  const recognition = new Recognition();
+  recognition.onresult = event => {
+    document.getElementById("inputBox").value = event.results[0][0].transcript;
+    statusEl.textContent = "Voice text captured. Press Send to AI.";
+  };
+  recognition.onerror = () => { statusEl.textContent = "Voice input failed."; };
+  recognition.start();
+}
+</script>
 </body>
 </html>
